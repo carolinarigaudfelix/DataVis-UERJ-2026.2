@@ -1,0 +1,93 @@
+:root {
+  --fundo: #fcfcfb;
+  --texto: #1f1f1f;
+  --suave: #6b6b6b;
+  --borda: #e4e4df;
+  --grade: #ececE8;
+  --propria: #2a6fdb;
+  --importada: #e8833a;
+  --haste: #c9c9c3;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: "cab cab" "ctl graf" "rod rod";
+  min-height: 100vh;
+}
+
+header { grid-area: cab; padding: 20px 24px 8px; }
+header h1 { margin: 0; font-size: 1.35rem; }
+#subtitulo { margin: 4px 0 0; color: var(--suave); font-size: 0.95rem; }
+
+#controles {
+  grid-area: ctl;
+  padding: 16px 24px;
+  font-size: 0.9rem;
+  border-right: 1px solid var(--borda);
+}
+fieldset { border: 1px solid var(--borda); border-radius: 6px; margin: 0 0 16px; }
+fieldset label { display: block; margin: 2px 0; cursor: pointer; }
+#controles > label { display: block; }
+#controles input[type=range] { width: 100%; margin: 4px 0 16px; }
+
+#legenda { list-style: none; padding: 0; margin: 0 0 12px; }
+#legenda li { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.ponto { width: 12px; height: 12px; border-radius: 50%; }
+.ponto.propria { background: var(--propria); }
+.ponto.importada { background: var(--importada); }
+.suave { color: var(--suave); font-size: 0.8rem; }
+
+#grafico { grid-area: graf; padding: 8px 16px; min-width: 0; }
+#grafico svg { width: 100%; height: auto; display: block; }
+
+.eixo text { font-size: 11px; fill: var(--suave); }
+.eixo path { display: none; }
+.eixo line { stroke: var(--grade); }
+
+.linha text { font-size: 11px; fill: var(--texto); }
+.linha .gap { fill: var(--suave); font-variant-numeric: tabular-nums; }
+.linha .haste { stroke: var(--haste); stroke-width: 2; }
+.linha .alvo { fill: transparent; }
+.linha:hover .alvo { fill: rgba(0, 0, 0, 0.04); }
+.linha circle { stroke: var(--fundo); stroke-width: 2; }
+.linha .propria { fill: var(--propria); }
+.linha .importada { fill: var(--importada); }
+
+#tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+}
+
+footer {
+  grid-area: rod;
+  padding: 12px 24px 20px;
+  font-size: 0.8rem;
+  color: var(--suave);
+  border-top: 1px solid var(--borda);
+}
+
+@media (max-width: 760px) {
+  body { grid-template-columns: 1fr; grid-template-areas: "cab" "ctl" "graf" "rod"; }
+  #controles { border-right: none; border-bottom: 1px solid var(--borda); }
+}
+
+details { border-top: 1px solid var(--borda); padding-top: 8px; margin-top: 8px; font-size: 0.85rem; }
+summary { cursor: pointer; font-weight: 600; margin-bottom: 4px; }
+details p { margin: 6px 0; }
+details ul { margin: 4px 0; padding-left: 18px; }
+details li { margin-bottom: 4px; }

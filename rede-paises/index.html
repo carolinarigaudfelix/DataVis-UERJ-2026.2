@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Países e catálogo de filmes</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="painel">
+  <h1>Quais países compartilham o mesmo catálogo de filmes?</h1>
+
+  <details open>
+    <summary>Como ler</summary>
+    <p><b>Bolinha = país.</b> O tamanho é o número de filmes disponíveis naquele país
+      (filmes com nota no IMDb que têm registro de lançamento ou título na região).</p>
+    <p><b>Cor = nota média</b> desses filmes no IMDb (nota global, dada por usuários do mundo todo).</p>
+    <div id="legendaCor"></div>
+    <p><b>Ligação = catálogo em comum</b>, medido pelo índice de Jaccard:</p>
+    <p class="formula">filmes em comum ÷ filmes que estão em pelo menos um dos dois</p>
+    <p>Vai de 0 (nenhum filme em comum) a 1 (catálogos idênticos). Exemplo: 0,437 entre BR e ES
+      quer dizer que 43,7% de todos os filmes presentes no Brasil ou na Espanha estão nos dois.
+      Quanto maior o valor, mais grossa a linha e mais perto os países ficam.</p>
+    <p>Cada país traz as suas 5 ligações mais fortes. Um país pode aparecer com mais de 5 porque
+      também entra entre as 5 mais fortes de outros países.</p>
+  </details>
+
+  <details>
+    <summary>Ajustar o desenho</summary>
+    <label>Repulsão: <span id="vCharge"></span>
+      <input type="range" id="charge" min="50" max="2000" step="50" value="600"></label>
+    <label>Distância das ligações: <span id="vDist"></span>
+      <input type="range" id="dist" min="0.5" max="5" step="0.1" value="2"></label>
+    <label>Tamanho dos nós: <span id="vRaio"></span>
+      <input type="range" id="raio" min="0.3" max="2" step="0.1" value="1"></label>
+    <button id="fit">Enquadrar tudo</button>
+  </details>
+
+  <div id="sel">Clique em um país para destacar as ligações dele.</div>
+  <p id="rodape"></p>
+</div>
+<svg></svg>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="script.js"></script>
+</body>
+</html>

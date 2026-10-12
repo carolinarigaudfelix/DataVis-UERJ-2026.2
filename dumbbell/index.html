@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Próprios x importados</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Os filmes próprios de cada país são mais bem avaliados que os importados?</h1>
+    <p id="subtitulo">Nota média no IMDb dos filmes exibidos com o título original e com título traduzido, por região.</p>
+  </header>
+
+  <section id="controles" aria-label="Controles do gráfico">
+    <fieldset>
+      <legend>Ordenar por</legend>
+      <label><input type="radio" name="ordem" value="gap" checked> Diferença</label>
+      <label><input type="radio" name="ordem" value="nota_propria"> Nota dos próprios</label>
+      <label><input type="radio" name="ordem" value="Regiao"> Região (A–Z)</label>
+    </fieldset>
+
+    <label for="minFilmes">Mínimo de filmes por grupo: <b id="vMin"></b></label>
+    <input type="range" id="minFilmes" min="30" max="2000" step="10" value="30">
+    <p class="suave">Esconde países com poucos filmes em algum dos grupos, onde a média fica
+      instável. Começa em 30.</p>
+
+    <ul id="legenda" aria-label="Legenda">
+      <li><span class="ponto propria"></span>Título original (próprio)</li>
+      <li><span class="ponto importada"></span>Título traduzido (importado)</li>
+    </ul>
+    <p class="suave">Passe o mouse numa linha para ver os números.</p>
+
+    <details open>
+      <summary>Como ler</summary>
+      <p><b>Próprio:</b> filme exibido no país com o mesmo título original. Na prática,
+        produção local ou filme que não precisou de tradução.</p>
+      <p><b>Importado:</b> filme exibido com título traduzido ou adaptado para o país.</p>
+      <p><b>Diferença</b> (número à direita) = nota média dos próprios − nota média dos importados.</p>
+      <ul>
+        <li><b>Positiva:</b> os filmes próprios do país têm nota maior.</li>
+        <li><b>Negativa:</b> os importados têm nota maior.</li>
+      </ul>
+      <p>A nota é a do IMDb, dada por usuários do mundo todo. O gráfico compara o catálogo de
+        cada país, não a opinião do público daquele país.</p>
+    </details>
+
+    <details>
+      <summary>Por que um lado ganha?</summary>
+      <p>Hipóteses para discutir, que o gráfico sozinho não comprova:</p>
+      <ul>
+        <li><b>Filtro de importação:</b> só costuma ganhar tradução o filme estrangeiro que já
+          fez sucesso lá fora. Isso puxa a nota dos importados para cima.</li>
+        <li><b>Volume da indústria local:</b> países que produzem muito (Índia, Turquia,
+          Filipinas) têm muitos filmes populares de massa, o que baixa a média dos próprios.</li>
+        <li><b>Prestígio exportado:</b> quando a produção local que chega ao IMDb é sobretudo de
+          festival e cinema de autor, a média dos próprios sobe.</li>
+        <li><b>Idioma:</b> em países de língua inglesa quase nada é traduzido, então "próprio"
+          mistura produção local com Hollywood e a diferença tende a zero.</li>
+      </ul>
+    </details>
+  </section>
+
+  <main id="grafico"></main>
+  <div id="tooltip" role="tooltip"></div>
+  <footer id="rodape"></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="script.js"></script>
+</body>
+</html>

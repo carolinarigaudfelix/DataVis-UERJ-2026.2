@@ -1,0 +1,13 @@
+# dados brutos e intermediários (pesados demais para o GitHub)
+*.tsv
+*.tsv.gz
+*.parquet
+saida/
+
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# sistema
+.DS_Store

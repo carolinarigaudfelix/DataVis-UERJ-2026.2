@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemas escondidas por gênero</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gemas escondidas: filmes muito bem avaliados e pouco vistos</h1>
+    <p id="subtitulo">Cada ponto é um filme. A posição horizontal é a nota no IMDb.</p>
+  </header>
+
+  <section id="controles" aria-label="Controles do gráfico">
+    <label for="regiao">Região</label>
+    <select id="regiao"></select>
+
+    <label class="check"><input type="checkbox" id="soGemas"> Mostrar só as gemas</label>
+
+    <ul id="legenda" aria-label="Legenda">
+      <li><span class="ponto gema"></span><span>Gema: nota ≥ 7,5 e votos entre os 30% menores do gênero na região</span></li>
+      <li><span class="ponto comum"></span><span>Demais filmes</span></li>
+      <li class="suave">Tamanho do ponto = nº de votos</li>
+      <li class="suave">Cada gênero mostra até 60 filmes sorteados. A tabela abaixo traz os totais da base.</li>
+    </ul>
+
+    <div id="resumo"></div>
+  </section>
+
+  <main id="grafico"></main>
+  <div id="tooltip" role="tooltip"></div>
+  <footer id="rodape"></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="script.js"></script>
+</body>
+</html>
