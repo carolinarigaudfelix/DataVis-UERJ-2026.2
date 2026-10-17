@@ -1,5 +1,7 @@
 # Consumo audiovisual por região — IMDb + D3.js
 
+**Visualizações publicadas:** <https://carolinarigaudfelix.github.io/DataVis-UERJ-2026.2/>
+
 Três visualizações em D3.js sobre preferência de consumo de filmes por país/região,
 a partir da base pública do IMDb.
 
@@ -17,18 +19,26 @@ a partir da base pública do IMDb.
 
 | | |
 |---|---|
-| Ano do filme mais antigo | **ANO_INICIAL** |
-| Ano do filme mais recente | **ANO_FINAL** |
+| Ano do filme mais antigo | **1894** |
+| Ano do filme mais recente | **2025** |
 
-> Calculado pelo script a partir de `startYear` (ano de lançamento) e impresso na linha
-> `PERÍODO DA BASE:`. O valor também fica em `meta.json` e aparece no rodapé do beeswarm
-> e do dumbbell.
+> Calculado pelo script a partir de `startYear` (ano de lançamento dos filmes). O valor também
+> fica em `meta.json` e aparece no rodapé dos três gráficos.
+
+**O que entrou em cada gráfico**
+
+| Gráfico | Recorte |
+|---|---|
+| Force-directed | 73 países (com pelo menos 1.000 filmes) e 285 ligações |
+| Beeswarm | 30 regiões com mais filmes; 41.575 pontos desenhados (até 60 por região e gênero) |
+| Dumbbell | 93 países com pelo menos 30 filmes próprios e 30 importados |
 
 ## 3. Estrutura do repositório
 
 ```
 ├── index.html                  # página inicial com links para os 3 gráficos
 ├── requirements.txt            # bibliotecas Python do script
+├── comum/paises.js             # nome em português de cada código de região (usado nos 3 gráficos)
 ├── preparacao/
 │   └── preparar_dados.py       # baixa do Kaggle, trata tudo e grava os JSONs nas pastas data/
 ├── rede-paises/                # Gráfico 1 — force-directed
@@ -46,11 +56,12 @@ a partir da base pública do IMDb.
 
 ### Gráfico 1 — Force-directed graph (rede de países)
 
-**Pergunta:** quais países compartilham o mesmo catálogo de filmes?
+**Pergunta:** que proporção do catálogo de filmes cada país tem em comum com os outros?
 
 **Como ler**
 
-- **Bolinha = país.** O tamanho é o número de filmes disponíveis no país: filmes com nota no
+- **Bolinha = país**, identificado pela sigla; o nome completo aparece na lista de países e na
+  dica de cada bolinha. O tamanho é o número de filmes disponíveis no país: filmes com nota no
   IMDb que têm registro de lançamento ou título naquela região (tabela `title.akas`).
 - **Cor = nota média** desses filmes no IMDb (escala do amarelo, nota menor, ao azul-escuro,
   nota maior). É a nota global, dada por usuários do mundo todo.
@@ -63,13 +74,14 @@ a partir da base pública do IMDb.
   Vai de 0 (nenhum filme em comum) a 1 (catálogos idênticos). Exemplo: o valor 0,437 entre
   Brasil e Espanha significa que 43,7% de todos os filmes presentes em pelo menos um dos dois
   países estão nos dois. Quanto maior o valor, mais grossa a linha e mais próximos os países
-  ficam no desenho.
+  ficam no desenho. É uma **proporção**, não uma quantidade: a quantidade de filmes em comum
+  aparece na lista do país selecionado.
 - **Quais ligações aparecem:** cada país traz as suas 5 ligações mais fortes. Um país pode ter
   mais de 5, porque também entra entre as 5 mais fortes de outros países (o Brasil, por
   exemplo, aparece com 11).
 - **Quais países entram:** só regiões com pelo menos 1.000 filmes, para que o índice não seja
   distorcido por catálogos muito pequenos.
-- Ao clicar num país, o painel lista as ligações dele da mais forte para a mais fraca, com o
+- Ao selecionar um país (no gráfico ou na lista "Destacar um país"), o painel lista as ligações dele da mais forte para a mais fraca, com o
   número de filmes em comum.
 
 **Módulo D3:** [d3-force](https://d3js.org/d3-force) ·
@@ -77,7 +89,7 @@ a partir da base pública do IMDb.
 
 ### Gráfico 2 — Beeswarm (gemas escondidas)
 
-**Pergunta:** em cada país e gênero, onde estão os filmes muito bem avaliados e pouco vistos?
+**Pergunta:** em cada país e gênero, onde estão os filmes muito bem avaliados, mas pouco vistos?
 
 **Como ler**
 
@@ -108,8 +120,8 @@ a partir da base pública do IMDb.
     Na prática, produção local ou filme que não precisou de tradução.
   - **Laranja, importado:** nota média dos filmes exibidos com título traduzido ou adaptado.
 - **Diferença** (número à direita) = nota média dos próprios − nota média dos importados.
-  - Positiva: os filmes próprios têm nota maior.
-  - Negativa: os importados têm nota maior.
+  - Positiva, em verde: os filmes próprios têm nota maior.
+  - Negativa, em vermelho: os importados têm nota maior.
 - **Filtro "mínimo de filmes por grupo":** esconde países com poucos filmes em algum dos dois
   grupos, onde a média fica instável. O padrão é 30.
 - Só entram filmes com pelo menos 50 votos.
@@ -123,8 +135,9 @@ a partir da base pública do IMDb.
   muitos filmes populares de massa, o que baixa a média dos próprios.
 - **Prestígio exportado:** quando a produção local que chega ao IMDb é sobretudo de festival e
   cinema de autor, a média dos próprios sobe.
-- **Idioma:** em países de língua inglesa quase nada é traduzido, então "próprio" mistura
-  produção local com Hollywood e a diferença tende a zero.
+- **Idioma:** em países de língua inglesa, filmes americanos e britânicos chegam sem tradução,
+  com o mesmo título original. Por isso são contados como "próprios", mesmo sendo estrangeiros.
+  Os dois grupos acabam com filmes parecidos e a diferença tende a zero.
 
 Lembrando que a nota é global: o gráfico compara o catálogo de cada país, não mede o quanto
 o público daquele país aprova um ou outro.
@@ -166,5 +179,7 @@ e abra `http://localhost:8000`.
 - "Próprio x importado" é uma aproximação pelo título: coproduções e filmes que mantêm o
   título original fora do país de origem (comum em países de língua inglesa) podem cair no
   grupo "próprio".
-- Códigos de região seguem o IMDb (ISO 3166-1), incluindo históricos como `SUHH`
-  (União Soviética), `DDDE` (Alemanha Oriental) e `XWW` (mundial).
+- Códigos de região seguem o IMDb (ISO 3166-1), incluindo históricos e regionais como `SUHH`
+  (União Soviética), `DDDE` (Alemanha Oriental), `XEU` (lançamento regional na Europa) e `XWW`
+  (lançamento mundial). Os gráficos mostram o nome em português; a tradução fica em
+  `comum/paises.js`.

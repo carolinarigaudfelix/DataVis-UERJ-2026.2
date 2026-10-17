@@ -72,15 +72,16 @@ d3.json("data/graph.json").then(data => {
         .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
 
   node.append("title").text(d =>
-    `${d.id}\n${d.filmes.toLocaleString("pt-BR")} filmes\nnota média ${virgula(d.nota, 2)}`);
+    `${nomePaisComCodigo(d.id)}\n${d.filmes.toLocaleString("pt-BR")} filmes\nnota média ${virgula(d.nota, 2)}`);
   link.append("title").text(d =>
-    `${d.source.id} e ${d.target.id}\nJaccard ${virgula(d.value, 3)}` +
+    `${nomePais(d.source.id)} e ${nomePais(d.target.id)}\n` +
+    `Proporção de filmes em comum (Jaccard): ${virgula(d.value, 3)}` +
     (d.comuns ? `\n${d.comuns.toLocaleString("pt-BR")} filmes em comum` : ""));
 
   const label = g.append("g").selectAll("text").data(nodes).join("text")
       .attr("text-anchor", "middle").attr("dy", "0.35em").text(d => d.id);
 
-  // ---------- destaque ao clicar ----------
+  // ---------- destaque do país selecionado ----------
   const ehLigado = (l, d) => l.source.id === d.id || l.target.id === d.id;
 
   function atualizarDestaque() {
@@ -89,7 +90,8 @@ d3.json("data/graph.json").then(data => {
       link.attr("stroke", "#999").attr("stroke-opacity", 0.5).attr("stroke-width", d => larg(d.value));
       node.attr("opacity", 1).attr("stroke", "#fff").attr("stroke-width", 1.5);
       label.attr("opacity", 1);
-      sel.textContent = "Clique em um país para destacar as ligações dele.";
+      sel.textContent = "Selecione um país no gráfico ou na lista acima para destacar as ligações dele.";
+      seletor.value = "";
       return;
     }
     const vizinhos = new Set([selecionado.id]);
@@ -108,13 +110,25 @@ d3.json("data/graph.json").then(data => {
       .map(l => ({ pais: l.source.id === selecionado.id ? l.target.id : l.source.id,
                    v: l.value, comuns: l.comuns }))
       .sort((a, b) => b.v - a.v)
-      .map(x => `<li><b>${x.pais}</b> — ${virgula(x.v, 3)}` +
+      .map(x => `<li><b>${nomePaisComCodigo(x.pais)}</b> — ${virgula(x.v, 3)}` +
         (x.comuns ? ` · ${x.comuns.toLocaleString("pt-BR")} filmes em comum` : "") + `</li>`)
       .join("");
-    sel.innerHTML = `<b>${selecionado.id}</b>: ${selecionado.filmes.toLocaleString("pt-BR")} filmes,
+    sel.innerHTML = `<b>${nomePaisComCodigo(selecionado.id)}</b>: ${selecionado.filmes.toLocaleString("pt-BR")} filmes,
       nota média ${virgula(selecionado.nota, 2)}<br>
       Ligações, da mais forte para a mais fraca (índice de Jaccard, de 0 a 1):<ol>${lista}</ol>`;
+    seletor.value = selecionado.id;
   }
+
+  // ---------- lista de países (alternativa ao toque/clique no gráfico) ----------
+  const seletor = document.getElementById("pais");
+  d3.select(seletor).selectAll("option.pais")
+    .data([...nodes].sort((a, b) => nomePais(a.id).localeCompare(nomePais(b.id), "pt-BR")))
+    .join("option").attr("class", "pais")
+    .attr("value", d => d.id).text(d => nomePaisComCodigo(d.id));
+  seletor.onchange = () => {
+    selecionado = nodes.find(n => n.id === seletor.value) || null;
+    atualizarDestaque();
+  };
 
   node.on("click", (e, d) => {
     e.stopPropagation();

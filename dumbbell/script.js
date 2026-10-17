@@ -2,11 +2,15 @@
 // Exemplo de referência: https://observablehq.com/@d3/dot-plot/2
 
 const LARGURA = 900;
-const MARGEM = { top: 30, right: 70, bottom: 10, left: 60 };
+const MARGEM = { top: 30, right: 70, bottom: 10, left: 200 };
 const ALTURA_LINHA = 22;
 
 const fmtNota = n => n.toFixed(2).replace(".", ",");
-const fmtGap = n => (n > 0 ? "+" : "") + n.toFixed(2).replace(".", ",");
+const fmtGap = n => { const r = Math.round(n * 100) / 100;
+  return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(2).replace(".", ","); };
+// verde se os próprios têm nota maior, vermelho se os importados têm, neutro se empatam
+const classeGap = n => { const r = Math.round(n * 100) / 100;
+  return r > 0 ? "gap positivo" : r < 0 ? "gap negativo" : "gap"; };
 const fmtBR = n => d3.format(",d")(n).replace(/,/g, ".");
 
 const svg = d3.select("#grafico").append("svg");
@@ -44,7 +48,7 @@ Promise.all([
     const linhas = dados
       .filter(d => d.filmes_propria >= minimo && d.filmes_importada >= minimo)
       .sort(ordem === "Regiao"
-        ? (a, b) => d3.ascending(a.Regiao, b.Regiao)
+        ? (a, b) => nomePais(a.Regiao).localeCompare(nomePais(b.Regiao), "pt-BR")
         : (a, b) => b[ordem] - a[ordem]);
 
     const altura = MARGEM.top + linhas.length * ALTURA_LINHA + MARGEM.bottom;
@@ -81,16 +85,17 @@ Promise.all([
     linha.select(".alvo")
       .attr("x", 0).attr("width", LARGURA)
       .attr("y", -ALTURA_LINHA / 2).attr("height", ALTURA_LINHA);
-    linha.select(".regiao").attr("x", MARGEM.left - 12).text(d => d.Regiao);
+    linha.select(".regiao").attr("x", MARGEM.left - 12).text(d => nomePais(d.Regiao));
     linha.select(".haste")
       .attr("x1", d => x(d.nota_importada)).attr("x2", d => x(d.nota_propria));
     linha.select("circle.importada").attr("cx", d => x(d.nota_importada));
     linha.select("circle.propria").attr("cx", d => x(d.nota_propria));
-    linha.select(".gap").attr("x", LARGURA - MARGEM.right + 10).text(d => fmtGap(d.gap));
+    linha.select(".gap").attr("x", LARGURA - MARGEM.right + 10)
+      .attr("class", d => classeGap(d.gap)).text(d => fmtGap(d.gap));
 
-    linha.on("mousemove", (e, d) => {
+    linha.on("mousemove click", (e, d) => {
       tooltip.html(
-        `<b>${d.Regiao}</b><br>` +
+        `<b>${nomePaisComCodigo(d.Regiao)}</b><br>` +
         `<span style="color:var(--propria)">●</span> Próprios: ${fmtNota(d.nota_propria)} ` +
         `(${fmtBR(d.filmes_propria)} filmes)<br>` +
         `<span style="color:var(--importada)">●</span> Importados: ${fmtNota(d.nota_importada)} ` +

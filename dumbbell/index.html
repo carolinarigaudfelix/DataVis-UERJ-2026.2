@@ -17,7 +17,7 @@
       <legend>Ordenar por</legend>
       <label><input type="radio" name="ordem" value="gap" checked> Diferença</label>
       <label><input type="radio" name="ordem" value="nota_propria"> Nota dos próprios</label>
-      <label><input type="radio" name="ordem" value="Regiao"> Região (A–Z)</label>
+      <label><input type="radio" name="ordem" value="Regiao"> País (A–Z)</label>
     </fieldset>
 
     <label for="minFilmes">Mínimo de filmes por grupo: <b id="vMin"></b></label>
@@ -29,7 +29,7 @@
       <li><span class="ponto propria"></span>Título original (próprio)</li>
       <li><span class="ponto importada"></span>Título traduzido (importado)</li>
     </ul>
-    <p class="suave">Passe o mouse numa linha para ver os números.</p>
+    <p class="suave">Aponte para uma linha (ou toque nela) para ver os números.</p>
 
     <details open>
       <summary>Como ler</summary>
@@ -38,8 +38,8 @@
       <p><b>Importado:</b> filme exibido com título traduzido ou adaptado para o país.</p>
       <p><b>Diferença</b> (número à direita) = nota média dos próprios − nota média dos importados.</p>
       <ul>
-        <li><b>Positiva:</b> os filmes próprios do país têm nota maior.</li>
-        <li><b>Negativa:</b> os importados têm nota maior.</li>
+        <li><b class="txt-positivo">Positiva (verde):</b> os filmes próprios do país têm nota maior.</li>
+        <li><b class="txt-negativo">Negativa (vermelho):</b> os importados têm nota maior.</li>
       </ul>
       <p>A nota é a do IMDb, dada por usuários do mundo todo. O gráfico compara o catálogo de
         cada país, não a opinião do público daquele país.</p>
@@ -55,8 +55,9 @@
           Filipinas) têm muitos filmes populares de massa, o que baixa a média dos próprios.</li>
         <li><b>Prestígio exportado:</b> quando a produção local que chega ao IMDb é sobretudo de
           festival e cinema de autor, a média dos próprios sobe.</li>
-        <li><b>Idioma:</b> em países de língua inglesa quase nada é traduzido, então "próprio"
-          mistura produção local com Hollywood e a diferença tende a zero.</li>
+        <li><b>Idioma:</b> em países de língua inglesa, filmes americanos e britânicos chegam sem
+          tradução, com o mesmo título original. Por isso eles são contados como "próprios", mesmo
+          sendo estrangeiros. Os dois grupos acabam com filmes parecidos e a diferença tende a zero.</li>
       </ul>
     </details>
   </section>
@@ -66,6 +67,7 @@
   <footer id="rodape"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="../comum/paises.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

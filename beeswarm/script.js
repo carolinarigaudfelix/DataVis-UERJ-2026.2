@@ -17,12 +17,11 @@ Promise.all([
   d3.json("data/meta.json").catch(() => null),
 ]).then(([filmes, meta]) => {
   const porRegiao = d3.group(filmes, d => d.Regiao);
-  const regioes = [...porRegiao.keys()].sort((a, b) =>
-    d3.sum(porRegiao.get(b), d => d.NumVotos) - d3.sum(porRegiao.get(a), d => d.NumVotos));
+  const regioes = [...porRegiao.keys()].sort((a, b) => nomePais(a).localeCompare(nomePais(b), "pt-BR"));
 
   const select = d3.select("#regiao");
   select.selectAll("option").data(regioes).join("option")
-    .attr("value", d => d).text(d => d);
+    .attr("value", d => d).text(d => nomePaisComCodigo(d));
   select.property("value", regioes.includes("BR") ? "BR" : regioes[0]);
 
   select.on("change", desenhar);
@@ -106,7 +105,7 @@ Promise.all([
       .on("mousemove", (e, d) => {
         tooltip.html(
           `<b>${d.TituloPrimario}</b>${d.AnoLancamento ? ` (${d.AnoLancamento})` : ""}<br>` +
-          `${d.Genero} · nota ${fmtNota(d.NotaMedia)} · ${fmtBR(d.NumVotos)} votos` +
+          `${nomePais(d.Regiao)} · ${d.Genero} · nota ${fmtNota(d.NotaMedia)} · ${fmtBR(d.NumVotos)} votos` +
           (d.gema ? "<br><b style='color:var(--gema)'>Gema escondida</b>" : ""))
           .style("left", e.clientX + 14 + "px").style("top", e.clientY + 14 + "px")
           .style("opacity", 1);
@@ -116,7 +115,7 @@ Promise.all([
     // ---------- resumo lateral (tabela = leitura sem depender da cor) ----------
     const totalGemas = d3.sum(generos, g => g[1].gemas);
     d3.select("#resumo").html(
-      `<b>${regiao}</b>: ${fmtBR(totalGemas)} gemas no total ` +
+      `<b>${nomePaisComCodigo(regiao)}</b>: ${fmtBR(totalGemas)} gemas no total ` +
       `(contando cada gênero do filme)<table>` +
       generos.map(([g, v]) =>
         `<tr><td>${g}</td><td>${fmtBR(v.gemas)} de ${fmtBR(v.total)}</td></tr>`).join("") +
