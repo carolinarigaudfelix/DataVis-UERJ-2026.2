@@ -8,6 +8,7 @@ const NOTA_GEMA = 7.5;            // mesmo valor do preparar_dados.py
 
 const fmtBR = n => d3.format(",d")(n).replace(/,/g, ".");
 const fmtNota = n => n.toFixed(1).replace(".", ",");
+const normalizar = t => (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 const svg = d3.select("#grafico").append("svg");
 const tooltip = d3.select("#tooltip");
@@ -19,12 +20,47 @@ Promise.all([
   const porRegiao = d3.group(filmes, d => d.Regiao);
   const regioes = [...porRegiao.keys()].sort((a, b) => nomePais(a).localeCompare(nomePais(b), "pt-BR"));
 
-  const select = d3.select("#regiao");
-  select.selectAll("option").data(regioes).join("option")
-    .attr("value", d => d).text(d => nomePaisComCodigo(d));
-  select.property("value", regioes.includes("BR") ? "BR" : regioes[0]);
+  // ---------- busca de país (campo com sugestões) ----------
+  const campoRegiao = document.getElementById("regiao");
+  const erroRegiao = document.getElementById("erroRegiao");
+  let regiaoAtual = regioes.includes("BR") ? "BR" : regioes[0];
+  d3.select("#listaRegioes").selectAll("option").data(regioes).join("option")
+    .attr("value", d => nomePaisComCodigo(d));
 
-  select.on("change", desenhar);
+  // aceita "Brasil (BR)", "brasil", "BR"; ignora acentos e maiúsculas
+  function acharRegiao(texto, aceitaInicio = true) {
+    const t = normalizar(texto);
+    if (!t) return null;
+    return regioes.find(r => normalizar(nomePaisComCodigo(r)) === t) ||
+           regioes.find(r => normalizar(nomePais(r)) === t || normalizar(r) === t) ||
+           (aceitaInicio && regioes.filter(r => normalizar(nomePais(r)).startsWith(t)).length === 1
+             ? regioes.find(r => normalizar(nomePais(r)).startsWith(t)) : null);
+  }
+  function mostrarRegiao() { campoRegiao.value = nomePaisComCodigo(regiaoAtual); }
+  function escolherRegiao(r) { regiaoAtual = r; erroRegiao.textContent = ""; mostrarRegiao(); desenhar(); }
+
+  mostrarRegiao();
+  // ao entrar no campo, limpa o texto para a lista de sugestões aparecer completa
+  campoRegiao.addEventListener("focus", () => { campoRegiao.placeholder = nomePaisComCodigo(regiaoAtual); campoRegiao.value = ""; });
+  campoRegiao.addEventListener("input", () => {
+    erroRegiao.textContent = "";
+    const r = acharRegiao(campoRegiao.value, false);   // só troca sozinho com o nome completo
+    if (r) escolherRegiao(r);
+  });
+  campoRegiao.addEventListener("change", () => {
+    const r = acharRegiao(campoRegiao.value);
+    if (r) escolherRegiao(r);
+    else if (campoRegiao.value.trim()) erroRegiao.textContent = "País não encontrado. Escolha um da lista.";
+  });
+  campoRegiao.addEventListener("blur", () => {
+    if (!acharRegiao(campoRegiao.value)) { mostrarRegiao(); }
+    campoRegiao.placeholder = "Digite o nome do país";
+  });
+
+  // ---------- busca de filme ----------
+  const campoBusca = document.getElementById("busca");
+  campoBusca.addEventListener("input", aplicarBusca);
+
   d3.select("#soGemas").on("change", desenhar);
 
   if (meta) {
@@ -40,7 +76,7 @@ Promise.all([
   desenhar();
 
   function desenhar() {
-    const regiao = select.property("value");
+    const regiao = regiaoAtual;
     const soGemas = d3.select("#soGemas").property("checked");
     let dados = porRegiao.get(regiao);
     if (soGemas) dados = dados.filter(d => d.gema);
@@ -112,6 +148,12 @@ Promise.all([
       })
       .on("mouseleave", () => tooltip.style("opacity", 0));
 
+    // filmes desta região para as sugestões da busca
+    d3.select("#listaFilmes").selectAll("option")
+      .data([...new Set(porRegiao.get(regiao).map(d => d.TituloPrimario))].sort((a, b) => a.localeCompare(b, "pt-BR")))
+      .join("option").attr("value", d => d);
+    aplicarBusca();
+
     // ---------- resumo lateral (tabela = leitura sem depender da cor) ----------
     const totalGemas = d3.sum(generos, g => g[1].gemas);
     d3.select("#resumo").html(
@@ -120,6 +162,49 @@ Promise.all([
       generos.map(([g, v]) =>
         `<tr><td>${g}</td><td>${fmtBR(v.gemas)} de ${fmtBR(v.total)}</td></tr>`).join("") +
       `</table>`);
+  }
+  // destaca os filmes cujo título contém o texto buscado; os demais ficam apagados
+  function aplicarBusca() {
+    const q = normalizar(campoBusca.value);
+    const pontos = svg.selectAll("circle.filme");
+    const saida = d3.select("#resultadoBusca");
+    if (q.length < 2) {
+      pontos.classed("apagado", false).classed("achado", false);
+      saida.html("");
+      return;
+    }
+    const bate = d => normalizar(d.TituloPrimario).includes(q);
+    pontos.classed("achado", bate).classed("apagado", d => !bate(d));
+    pontos.filter(bate).raise();
+
+    const daRegiao = porRegiao.get(regiaoAtual).filter(bate);
+    const unicos = d3.groups(daRegiao, d => d.ID);
+    const soGemas = d3.select("#soGemas").property("checked");
+
+    if (unicos.length === 1) {
+      const linhas = unicos[0][1], f = linhas[0];
+      const gemasEm = linhas.filter(d => d.gema).map(d => d.Genero);
+      saida.html(
+        `<b>${f.TituloPrimario}</b>${f.AnoLancamento ? ` (${f.AnoLancamento})` : ""}<br>` +
+        `Nota ${fmtNota(f.NotaMedia)} · ${fmtBR(f.NumVotos)} votos<br>` +
+        `Gêneros: ${linhas.map(d => d.Genero).join(", ")}<br>` +
+        (gemasEm.length ? `<b style="color:var(--gema)">Gema escondida</b> em ${gemasEm.join(", ")}`
+                        : "Não é gema nesta região.") +
+        (soGemas && !gemasEm.length ? "<br>Desmarque \"Mostrar só as gemas\" para vê-lo no gráfico." : ""));
+    } else if (unicos.length > 1) {
+      saida.html(`<b>${unicos.length} filmes</b> com esse nome nesta região, destacados no gráfico. ` +
+        `Digite mais letras para encontrar um só.`);
+    } else {
+      // não está entre os filmes sorteados desta região: procura nas outras
+      const outras = [...new Set(filmes.filter(bate).map(d => d.Regiao))]
+        .sort((a, b) => nomePais(a).localeCompare(nomePais(b), "pt-BR"));
+      saida.html(
+        `Nenhum filme com esse nome entre os sorteados de ${nomePais(regiaoAtual)}. ` +
+        `Como cada gênero mostra até 60 filmes, nem todos aparecem.` +
+        (outras.length ? `<br>Aparece em: ` +
+          outras.map(r => `<button type="button" data-regiao="${r}">${nomePais(r)}</button>`).join("") : ""));
+      saida.selectAll("button").on("click", function () { escolherRegiao(this.dataset.regiao); });
+    }
   }
 }).catch(() => {
   d3.select("#grafico").html(

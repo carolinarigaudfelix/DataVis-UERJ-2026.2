@@ -33,7 +33,17 @@ header h1 { margin: 0; font-size: 1.35rem; }
   border-right: 1px solid var(--borda);
 }
 #controles > label { display: block; margin: 0 0 4px; font-weight: 600; }
-#controles select { width: 100%; padding: 6px; margin-bottom: 14px; font: inherit; }
+#controles select, #controles input:not([type=checkbox]) {
+  width: 100%; padding: 6px; margin-bottom: 4px; font: inherit;
+  border: 1px solid var(--borda); border-radius: 4px; background: #fff;
+}
+.erro { color: #b42318; font-size: 0.8rem; margin: 0 0 10px; min-height: 1em; }
+#resultadoBusca { font-size: 0.8rem; color: var(--suave); margin: 4px 0 14px; line-height: 1.4; }
+#resultadoBusca b { color: var(--texto); }
+#resultadoBusca button {
+  font: inherit; font-size: 0.8rem; padding: 1px 6px; margin: 2px 2px 0 0; cursor: pointer;
+  border: 1px solid var(--borda); border-radius: 4px; background: #fff; color: var(--texto);
+}
 .check { font-weight: 400 !important; margin-bottom: 14px !important; cursor: pointer; }
 
 #legenda { list-style: none; padding: 0; margin: 0 0 16px; }
@@ -62,6 +72,8 @@ circle.filme { stroke: var(--fundo); stroke-width: 1; cursor: pointer; }
 circle.filme.gema { fill: var(--gema); }
 circle.filme.comum { fill: var(--comum); }
 circle.filme:hover { stroke: var(--texto); stroke-width: 1.5; }
+circle.filme.apagado { opacity: 0.15; }
+circle.filme.achado { stroke: var(--texto); stroke-width: 2.5; }
 
 #tooltip {
   position: fixed;

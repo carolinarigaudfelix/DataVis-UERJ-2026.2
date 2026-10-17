@@ -103,6 +103,9 @@ a partir da base pública do IMDb.
   milhares de pontos por linha. A classificação de gema, porém, usa todos os filmes, e a tabela
   lateral mostra os totais reais ("1.657 de 13.454" = 1.657 gemas entre 13.454 documentários
   dos EUA).
+- **Busca:** o campo "País" aceita digitar o nome, e o campo "Buscar filme" destaca no gráfico os
+  filmes cujo título contém o texto digitado. A busca cobre os filmes desenhados; se o filme não
+  estiver entre os sorteados do país, a página indica em quais outros países ele aparece.
 - Os gêneros vêm ordenados pela proporção de gemas: os mais "garimpáveis" ficam em cima.
 - Só entram filmes com pelo menos 50 votos, já que abaixo disso a nota é instável.
 
@@ -135,9 +138,10 @@ a partir da base pública do IMDb.
   muitos filmes populares de massa, o que baixa a média dos próprios.
 - **Prestígio exportado:** quando a produção local que chega ao IMDb é sobretudo de festival e
   cinema de autor, a média dos próprios sobe.
-- **Idioma:** em países de língua inglesa, filmes americanos e britânicos chegam sem tradução,
-  com o mesmo título original. Por isso são contados como "próprios", mesmo sendo estrangeiros.
-  Os dois grupos acabam com filmes parecidos e a diferença tende a zero.
+- **Idioma:** a separação entre próprio e importado é feita pelo título. No Brasil, "The Lion
+  King" vira "O Rei Leão" e conta como importado. No Reino Unido, o título não muda, então o
+  mesmo filme americano conta como "próprio". Por isso, em países de língua inglesa, o grupo
+  "próprio" fica misturado com filmes estrangeiros e a comparação é menos confiável.
 
 Lembrando que a nota é global: o gráfico compara o catálogo de cada país, não mede o quanto
 o público daquele país aprova um ou outro.

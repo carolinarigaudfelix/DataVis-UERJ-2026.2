@@ -13,8 +13,16 @@
   </header>
 
   <section id="controles" aria-label="Controles do gráfico">
-    <label for="regiao">Região</label>
-    <select id="regiao"></select>
+    <label for="regiao">País</label>
+    <input id="regiao" list="listaRegioes" autocomplete="off" placeholder="Digite o nome do país">
+    <datalist id="listaRegioes"></datalist>
+    <p id="erroRegiao" class="erro" role="alert"></p>
+
+    <label for="busca">Buscar filme</label>
+    <input id="busca" type="search" list="listaFilmes" autocomplete="off"
+      placeholder="Ex.: Cidade de Deus">
+    <datalist id="listaFilmes"></datalist>
+    <div id="resultadoBusca" aria-live="polite"></div>
 
     <label class="check"><input type="checkbox" id="soGemas"> Mostrar só as gemas</label>
 
