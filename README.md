@@ -14,6 +14,10 @@ a partir da base pública do IMDb.
   A leitura usa Polars em modo *streaming*, o que permite tratar o `title.akas` inteiro no
   computador comum.
 - **Recorte:** filmes (`titleType = movie`) com nota no IMDb e pelo menos uma região registrada.
+  Ficam de fora dos três gráficos os códigos do IMDb que não são países (títulos de lançamento
+  mundial `XWW` e regional, como `XEU` e `XAS`) e os países que não existem mais (União Soviética,
+  Iugoslávia, Alemanha Ocidental e Oriental, Tchecoslováquia). Os filmes continuam na base pelos
+  países atuais em que também foram lançados.
 
 ## 2. Período da base
 
@@ -31,7 +35,7 @@ a partir da base pública do IMDb.
 |---|---|
 | Force-directed | 73 países (com pelo menos 1.000 filmes) e 285 ligações |
 | Beeswarm | 30 regiões com mais filmes; 41.575 pontos desenhados (até 60 por região e gênero) |
-| Dumbbell | 93 países com pelo menos 30 filmes próprios e 30 importados |
+| Dumbbell | países com pelo menos 30 filmes exclusivos e 30 compartilhados |
 
 ## 3. Estrutura do repositório
 
@@ -40,7 +44,8 @@ a partir da base pública do IMDb.
 ├── requirements.txt            # bibliotecas Python do script
 ├── comum/paises.js             # nome em português de cada código de região (usado nos 3 gráficos)
 ├── preparacao/
-│   └── preparar_dados.py       # baixa do Kaggle, trata tudo e grava os JSONs nas pastas data/
+│   ├── preparar_dados.py       # baixa do Kaggle, trata tudo e grava os JSONs nas pastas data/
+│   └── amostra_dumbbell.py     # mostra exemplos de filmes exclusivos x compartilhados para conferência
 ├── rede-paises/                # Gráfico 1 — force-directed
 │   ├── index.html · style.css · script.js
 │   └── data/graph.json
@@ -81,6 +86,13 @@ a partir da base pública do IMDb.
   exemplo, aparece com 11).
 - **Quais países entram:** só regiões com pelo menos 1.000 filmes, para que o índice não seja
   distorcido por catálogos muito pequenos.
+- **Posição na tela:** cada país é puxado por todas as suas linhas ao mesmo tempo, e a posição
+  final é um equilíbrio entre elas. A distância na tela é aproximada: dois países podem ficar
+  colados por terem os mesmos vizinhos, mesmo que a ligação direta entre eles não seja a mais
+  forte. A ordem exata está na lista do país selecionado.
+- **Ajustar o desenho:** repulsão (o quanto as bolinhas se afastam umas das outras), distância
+  das ligações (comprimento de todas as linhas, mantendo a ordem) e tamanho dos nós (raio de
+  todas as bolinhas, mantendo a proporção). Esses controles mudam só a arrumação, não os dados.
 - Ao selecionar um país (no gráfico ou na lista "Destacar um país"), o painel lista as ligações dele da mais forte para a mais fraca, com o
   número de filmes em comum.
 
@@ -112,39 +124,52 @@ a partir da base pública do IMDb.
 **Módulo D3:** [d3-force](https://d3js.org/d3-force) (`forceX`, `forceY`, `forceCollide`) ·
 **Exemplo de referência:** <https://observablehq.com/@d3/beeswarm/2>
 
-### Gráfico 3 — Dumbbell (próprios x importados)
+### Gráfico 3 — Dumbbell (exclusivos x compartilhados)
 
-**Pergunta:** os filmes próprios de cada país são mais bem avaliados que os importados?
+**Pergunta:** em cada país, os filmes exclusivos (lançados só ali) são mais ou menos bem avaliados
+e vistos que os que também foram lançados em outros países?
+
+**Como separamos:** o `title.akas` registra em quais países cada filme foi lançado. Se o filme
+aparece em um único país, ele é **exclusivo** desse país. Se aparece em dois ou mais, é
+**compartilhado**. A definição usa só o registro do IMDb, sem interpretação.
+
+**Ligação com os outros gráficos:** a rede mostra o catálogo que os países compartilham; o
+dumbbell mostra o que é só de cada um; o beeswarm mostra as gemas escondidas.
 
 **Como ler**
 
 - **Linha = país**, com duas bolinhas:
-  - **Azul, próprio:** nota média dos filmes exibidos no país com o mesmo título original.
-    Na prática, produção local ou filme que não precisou de tradução.
-  - **Laranja, importado:** nota média dos filmes exibidos com título traduzido ou adaptado.
-- **Diferença** (número à direita) = nota média dos próprios − nota média dos importados.
-  - Positiva, em verde: os filmes próprios têm nota maior.
-  - Negativa, em vermelho: os importados têm nota maior.
-- **Filtro "mínimo de filmes por grupo":** esconde países com poucos filmes em algum dos dois
-  grupos, onde a média fica instável. O padrão é 30.
+  - **Laranja, exclusivo:** filmes lançados só naquele país. Ex.: um filme brasileiro que nunca
+    saiu do Brasil.
+  - **Azul, compartilhado:** filmes também lançados em outros países. Ex.: "Titanic" ou
+    "Cidade de Deus".
+- **Comparar:**
+  - **Nota média** de cada grupo. Diferença = exclusivos − compartilhados (verde: exclusivos com
+    nota maior; vermelho: menor).
+  - **Votos (mediana)**, usados como medida de alcance. A mediana evita que poucos sucessos
+    enormes distorçam o resultado. Diferença = quantas vezes os exclusivos têm os votos dos
+    compartilhados ("×0,5" = a metade). O eixo é logarítmico.
+- **Dica de cada linha:** além dos números, mostra os 5 filmes mais votados de cada grupo
+  naquele país, para dar uma ideia concreta de que filmes são exclusivos e quais são
+  compartilhados.
+- **Buscar país:** destaca a linha do país e leva até ela.
+- **Mínimo de filmes por grupo:** esconde países com poucos filmes em algum dos grupos (padrão 30).
 - Só entram filmes com pelo menos 50 votos.
-- **Ordenação:** pela diferença, pela nota dos próprios ou em ordem alfabética.
 
-**Por que um lado ganha?** Hipóteses para discussão, que o gráfico sozinho não comprova:
+**O que pode explicar a diferença** (hipóteses para discussão, que o gráfico sozinho não comprova):
 
-- **Filtro de importação:** só costuma ganhar tradução o filme estrangeiro que já fez sucesso
-  lá fora, o que puxa a nota dos importados para cima.
-- **Volume da indústria local:** países que produzem muito (Índia, Turquia, Filipinas) têm
-  muitos filmes populares de massa, o que baixa a média dos próprios.
-- **Prestígio exportado:** quando a produção local que chega ao IMDb é sobretudo de festival e
-  cinema de autor, a média dos próprios sobe.
-- **Idioma:** a separação entre próprio e importado é feita pelo título. No Brasil, "The Lion
-  King" vira "O Rei Leão" e conta como importado. No Reino Unido, o título não muda, então o
-  mesmo filme americano conta como "próprio". Por isso, em países de língua inglesa, o grupo
-  "próprio" fica misturado com filmes estrangeiros e a comparação é menos confiável.
+- **Filtro de circulação:** os filmes lançados em outros países costumam ser os que já fizeram
+  sucesso, o que puxaria votos e nota dos compartilhados para cima.
+- **Mercado interno:** muitos exclusivos são produções para o público local que não viajam.
+- **Público fiel:** exclusivos com poucos votos podem ter nota alta, avaliados por quem já gosta
+  daquele cinema.
+- **Registro incompleto:** alguns filmes aparecem em um só país porque o IMDb não registrou os
+  outros lançamentos.
 
-Lembrando que a nota é global: o gráfico compara o catálogo de cada país, não mede o quanto
-o público daquele país aprova um ou outro.
+**Conferir os dados:** depois de rodar o `preparar_dados.py`, o comando
+`python preparacao/amostra_dumbbell.py BR JP FR` mostra, para cada país, o resumo dos dois grupos
+e exemplos de filmes (os mais votados e alguns sorteados), com o número de países em que cada um
+aparece.
 
 **Módulos D3:** [d3-scale](https://d3js.org/d3-scale) + [d3-axis](https://d3js.org/d3-axis)
 (o dumbbell é uma variação do *dot plot*) ·
@@ -180,10 +205,7 @@ e abra `http://localhost:8000`.
 - O IMDb não informa votos ou notas por país: a nota é global. Os gráficos comparam
   **o catálogo disponível em cada região**, não a opinião do público daquela região.
 - Um filme com vários gêneros entra em cada um deles no beeswarm.
-- "Próprio x importado" é uma aproximação pelo título: coproduções e filmes que mantêm o
-  título original fora do país de origem (comum em países de língua inglesa) podem cair no
-  grupo "próprio".
-- Códigos de região seguem o IMDb (ISO 3166-1), incluindo históricos e regionais como `SUHH`
-  (União Soviética), `DDDE` (Alemanha Oriental), `XEU` (lançamento regional na Europa) e `XWW`
-  (lançamento mundial). Os gráficos mostram o nome em português; a tradução fica em
-  `comum/paises.js`.
+- No dumbbell, "exclusivo" depende do registro do IMDb: um filme pode aparecer em um só país
+  porque os outros lançamentos não foram registrados.
+- Códigos de região seguem o IMDb (ISO 3166-1). Os gráficos mostram o nome em português; a
+  tradução fica em `comum/paises.js`.

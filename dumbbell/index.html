@@ -3,62 +3,94 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Próprios x importados</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Exclusivos x compartilhados</title>
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <header>
-    <h1>Os filmes próprios de cada país são mais bem avaliados que os importados?</h1>
-    <p id="subtitulo">Nota média no IMDb dos filmes exibidos com o título original e com título traduzido, por região.</p>
+    <h1>Os filmes exclusivos de cada país são mais ou menos bem avaliados que os compartilhados?</h1>
+    <p id="subtitulo">Em cada país, compara os filmes lançados só ali com os que também foram lançados
+      em outros países.</p>
   </header>
 
   <section id="controles" aria-label="Controles do gráfico">
     <fieldset>
-      <legend>Ordenar por</legend>
-      <label><input type="radio" name="ordem" value="gap" checked> Diferença</label>
-      <label><input type="radio" name="ordem" value="nota_propria"> Nota dos próprios</label>
-      <label><input type="radio" name="ordem" value="Regiao"> País (A–Z)</label>
+      <legend>Comparar</legend>
+      <label><input type="radio" name="medida" value="nota" checked> Nota média</label>
+      <label><input type="radio" name="medida" value="votos"> Votos (mediana)</label>
+      <p class="suave dica-medida">Mediana = votos do filme que fica no meio da fila, do menos
+        para o mais votado. Mostra o filme "típico" do grupo.</p>
     </fieldset>
 
-    <label for="minFilmes">Mínimo de filmes por grupo: <b id="vMin"></b></label>
+    <fieldset>
+      <legend>Ordenar por</legend>
+      <label><input type="radio" name="ordem" value="diferenca" checked> Diferença</label>
+      <label><input type="radio" name="ordem" value="pais"> País (A–Z)</label>
+    </fieldset>
+
+    <label for="buscaPais" class="rotulo">Buscar país</label>
+    <input id="buscaPais" type="search" list="listaPaises" autocomplete="off"
+      placeholder="Ex.: Brasil">
+    <datalist id="listaPaises"></datalist>
+    <p id="msgBusca" class="msg" role="status"></p>
+
+    <label for="minFilmes" class="rotulo">Mínimo de filmes por grupo: <b id="vMin"></b></label>
     <input type="range" id="minFilmes" min="30" max="2000" step="10" value="30">
     <p class="suave">Esconde países com poucos filmes em algum dos grupos, onde a média fica
-      instável. Começa em 30.</p>
+      instável.</p>
 
     <ul id="legenda" aria-label="Legenda">
-      <li><span class="ponto propria"></span>Título original (próprio)</li>
-      <li><span class="ponto importada"></span>Título traduzido (importado)</li>
+      <li><span class="ponto exclusivo"></span>
+        <span><b>Exclusivo</b>: o filme aparece no IMDb lançado só naquele país.
+          <span class="ex">Ex.: um filme brasileiro que nunca saiu do Brasil.</span></span></li>
+      <li><span class="ponto compartilhado"></span>
+        <span><b>Compartilhado</b>: o filme também foi lançado em outros países.
+          <span class="ex">Ex.: "Titanic" ou "Cidade de Deus", lançados em dezenas de países.</span></span></li>
     </ul>
-    <p class="suave">Aponte para uma linha (ou toque nela) para ver os números.</p>
+    <p class="suave">Aponte para uma linha (ou toque nela) para ver os números e os 5 filmes mais votados de cada grupo.</p>
 
     <details open>
       <summary>Como ler</summary>
-      <p><b>Próprio:</b> filme exibido no país com o mesmo título original. Na prática,
-        produção local ou filme que não precisou de tradução.</p>
-      <p><b>Importado:</b> filme exibido com título traduzido ou adaptado para o país.</p>
-      <p><b>Diferença</b> (número à direita) = nota média dos próprios − nota média dos importados.</p>
+      <p><b>Como separamos:</b> o IMDb registra em quais países cada filme foi lançado. Se o filme
+        aparece em um único país, ele é <b>exclusivo</b> desse país. Se aparece em dois ou mais, é
+        <b>compartilhado</b>.</p>
+      <p><b>Nota média:</b> média da nota no IMDb de cada grupo.</p>
+      <div class="caixa-mediana">
+        <p><b>O que é a mediana de votos?</b></p>
+        <p>Coloque todos os filmes do grupo em fila, do menos votado para o mais votado. A
+          mediana é o número de votos do filme <b>que fica no meio da fila</b>: metade dos filmes
+          tem menos votos que ele, metade tem mais.</p>
+        <p class="ex-mediana">Exemplo com 5 filmes:<br>
+          10 · 20 · <b>50</b> · 80 · 1.000.000 votos<br>
+          Mediana = <b>50</b> (o do meio)<br>
+          Média = 200.032 (puxada pelo único sucesso)</p>
+        <p>Usamos a mediana porque um ou outro filme muito famoso inflaria a média e daria a falsa
+          impressão de que o grupo inteiro é muito visto. A mediana mostra o filme "típico".
+          Mais votos = filme mais visto.</p>
+      </div>
+      <p><b>Diferença</b> (número à direita):</p>
       <ul>
-        <li><b class="txt-positivo">Positiva (verde):</b> os filmes próprios do país têm nota maior.</li>
-        <li><b class="txt-negativo">Negativa (vermelho):</b> os importados têm nota maior.</li>
+        <li>Na nota: exclusivos − compartilhados. <b class="txt-positivo">Verde</b>: os exclusivos
+          têm nota maior. <b class="txt-negativo">Vermelho</b>: menor.</li>
+        <li>Nos votos: quantas vezes os exclusivos têm os votos dos compartilhados. "×0,5" = a
+          metade.</li>
       </ul>
-      <p>A nota é a do IMDb, dada por usuários do mundo todo. O gráfico compara o catálogo de
-        cada país, não a opinião do público daquele país.</p>
+      <p>A nota e os votos são do IMDb, dados por usuários do mundo todo, e não só do público
+        daquele país.</p>
     </details>
 
     <details>
-      <summary>Por que um lado ganha?</summary>
+      <summary>O que pode explicar a diferença?</summary>
       <p>Hipóteses para discutir, que o gráfico sozinho não comprova:</p>
       <ul>
-        <li><b>Filtro de importação:</b> só costuma ganhar tradução o filme estrangeiro que já
-          fez sucesso lá fora. Isso puxa a nota dos importados para cima.</li>
-        <li><b>Volume da indústria local:</b> países que produzem muito (Índia, Turquia,
-          Filipinas) têm muitos filmes populares de massa, o que baixa a média dos próprios.</li>
-        <li><b>Prestígio exportado:</b> quando a produção local que chega ao IMDb é sobretudo de
-          festival e cinema de autor, a média dos próprios sobe.</li>
-        <li><b>Idioma:</b> o gráfico separa próprio e importado pelo título. No Brasil, "The Lion
-          King" vira "O Rei Leão" e conta como importado. No Reino Unido, o título não muda, então o
-          mesmo filme americano conta como "próprio". Por isso, em países de língua inglesa, o grupo
-          "próprio" fica misturado com filmes estrangeiros e a comparação é menos confiável.</li>
+        <li><b>Filtro de circulação:</b> os filmes que são lançados em outros países costumam ser
+          os que já fizeram sucesso. Isso puxaria os votos e a nota dos compartilhados para cima.</li>
+        <li><b>Mercado interno:</b> muitos exclusivos são produções feitas para o público local
+          (comédias populares, filmes de TV), que não viajam e tendem a ter nota menor.</li>
+        <li><b>Público fiel:</b> exclusivos com poucos votos podem ter nota alta, porque são
+          avaliados sobretudo por quem já gosta daquele cinema.</li>
+        <li><b>Registro incompleto:</b> alguns filmes aparecem em um só país porque o IMDb não
+          registrou os outros lançamentos.</li>
       </ul>
     </details>
   </section>
@@ -69,6 +101,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="../comum/paises.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

@@ -23,6 +23,23 @@ from scipy.sparse import csr_matrix
 
 # ---------- CONFIG ----------
 TIPOS = ["movie"]          # só filmes, como no dicionário de dados do projeto
+
+# Regiões que ficam de fora dos três gráficos:
+#  - códigos que não são países (títulos de lançamento mundial ou regional do IMDb);
+#  - países que não existem mais. Os filmes continuam na base pelos países atuais
+#    em que também foram lançados.
+REGIOES_NAO_PAISES = ["XWW", "XEU", "XAS", "XSA", "XNA", "XAU", "XPI"]
+PAISES_EXTINTOS = ["SUHH",   # União Soviética
+                   "XWG",    # Alemanha Ocidental
+                   "DDDE",   # Alemanha Oriental
+                   "CSHH",   # Tchecoslováquia
+                   "XYU", "YUCS",  # Iugoslávia
+                   "XKO",    # Coreia (antes da divisão)
+                   "BUMM",   # Birmânia
+                   "ZRCD",   # Zaire
+                   "VDVN",   # Vietnã do Norte
+                   "ANHH"]   # Antilhas Holandesas
+REGIOES_EXCLUIDAS = REGIOES_NAO_PAISES + PAISES_EXTINTOS
 # Pastas resolvidas a partir da raiz do projeto (funciona de qualquer diretório)
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PASTA_SAIDA = os.path.join(RAIZ, "saida")   # parquet intermediário (fora do git)
@@ -39,7 +56,7 @@ NOTA_GEMA = 7.5            # gema = nota >= NOTA_GEMA ...
 QUANTIL_GEMA = 0.30        # ... e votos abaixo do quantil 30% da região+gênero
 
 # Dumbbell
-MIN_FILMES_GRUPO = 30      # região precisa de N filmes "próprios" e N "importados"
+MIN_FILMES_GRUPO = 30      # país precisa de N filmes exclusivos e N compartilhados
 
 # Fonte ÚNICA: dataset do Kaggle rahulsaranm/imdb-dataset.
 # Duas formas de obter:
@@ -98,7 +115,7 @@ def salvar(obj, nome):
 
 # ---------- 1) FILMES + NOTAS ----------
 titulos = (ler_tsv("title.basics.tsv",
-                   ["tconst", "titleType", "primaryTitle", "startYear", "genres"])
+                   ["tconst", "titleType", "primaryTitle", "originalTitle", "startYear", "genres"])
            .filter(pl.col("titleType").is_in(TIPOS))
            .join(ler_tsv("title.ratings.tsv", ["tconst", "averageRating", "numVotes"]),
                  on="tconst", how="inner")
@@ -111,7 +128,7 @@ print("Filmes com nota:", titulos.height)
 # ---------- 2) AKAS: todas as linhas dos filmes acima ----------
 akas = (ler_tsv("title.akas.tsv", ["titleId", "title", "region", "language", "isOriginalTitle"])
         .rename({"titleId": "tconst", "title": "TituloLocal"})
-        .filter(pl.col("region").is_not_null())
+        .filter(pl.col("region").is_not_null() & ~pl.col("region").is_in(REGIOES_EXCLUIDAS))
         .join(titulos.lazy().select("tconst"), on="tconst", how="semi")
         .with_columns((pl.col("isOriginalTitle") == "1").alias("isOriginalTitle"))
         .collect(engine="streaming"))
@@ -122,7 +139,8 @@ base = (akas.sort("isOriginalTitle", descending=True)
             .unique(["tconst", "region"], keep="first")
             .drop("TituloLocal")
             .join(titulos, on="tconst", how="inner")
-            .rename({"tconst": "ID", "primaryTitle": "TituloPrimario", "region": "Regiao",
+            .rename({"tconst": "ID", "primaryTitle": "TituloPrimario", "originalTitle": "TituloOriginal",
+                     "region": "Regiao",
                      "language": "Idioma", "titleType": "Tipo", "genres": "Generos",
                      "averageRating": "NotaMedia", "numVotes": "NumVotos",
                      "isOriginalTitle": "EUmTipoOriginal", "startYear": "AnoLancamento"})
@@ -208,33 +226,63 @@ salvar(amostra.to_dicts(), "titulos_genero.json")
 print("Beeswarm:", amostra.height, "pontos,", int(amostra["gema"].sum()), "gemas desenhadas,",
       len(regioes_bs), "regiões")
 
-# ---------- 7) GRÁFICO 3 — DUMBBELL (nota de filmes próprios x importados) ----------
-# "própria" = o título exibido na região é igual ao título original (não foi traduzido);
-# "importada" = o título foi traduzido/adaptado para aquela região.
-db = (akas.join(titulos.filter(pl.col("numVotes") >= MIN_VOTOS)
-                       .select("tconst", "primaryTitle", "averageRating"),
-                on="tconst", how="inner")
-          .with_columns(pl.when(pl.col("TituloLocal").str.strip_chars().str.to_lowercase() ==
-                                pl.col("primaryTitle").str.strip_chars().str.to_lowercase())
-                          .then(pl.lit("propria")).otherwise(pl.lit("importada")).alias("Grupo"))
-          .unique(["tconst", "region", "Grupo"])
-          .group_by(["region", "Grupo"])
-          .agg(pl.col("averageRating").mean().alias("nota"),
-               pl.col("tconst").n_unique().alias("filmes")))
-piv = (db.pivot(on="Grupo", index="region", values=["nota", "filmes"])
+# ---------- 7) GRÁFICO 3 — DUMBBELL (filmes exclusivos x compartilhados) ----------
+# Para cada filme, conta em quantos países ele aparece registrado no title.akas:
+#   "exclusivo"    = aparece em um único país (só foi lançado ali, segundo o IMDb);
+#   "compartilhado" = aparece em dois ou mais países.
+# Depois compara, por país, a nota média e a mediana de votos (alcance) dos dois grupos.
+paises_por_filme = (akas.select("tconst", "region").unique()
+                        .group_by("tconst").agg(pl.len().alias("n_paises")))
+por_filme = (akas.select("tconst", "region", "TituloLocal")
+                 .join(titulos.filter(pl.col("numVotes") >= MIN_VOTOS)
+                              .select("tconst", "originalTitle", "averageRating", "numVotes", "startYear"),
+                       on="tconst", how="inner")
+                 .group_by(["region", "tconst"])
+                 .agg(pl.col("TituloLocal").unique().sort().str.join(" | ").alias("TituloNoPais"),
+                      pl.col("originalTitle").first(), pl.col("startYear").first(),
+                      pl.col("averageRating").first(), pl.col("numVotes").first())
+                 .join(paises_por_filme, on="tconst")
+                 .with_columns(pl.when(pl.col("n_paises") == 1).then(pl.lit("exclusivo"))
+                                 .otherwise(pl.lit("compartilhado")).alias("Grupo")))
+por_filme.write_parquet(f"{PASTA_SAIDA}/exclusivos.parquet")   # usado pela amostra
+
+db = (por_filme.group_by(["region", "Grupo"])
+               .agg(pl.col("averageRating").mean().alias("nota"),
+                    pl.col("numVotes").median().alias("votos"),
+                    pl.len().alias("filmes")))
+piv = (db.pivot(on="Grupo", index="region", values=["nota", "votos", "filmes"])
          .rename({"region": "Regiao"}))
-for col in ["nota_propria", "nota_importada", "filmes_propria", "filmes_importada"]:
+for col in ["nota_exclusivo", "nota_compartilhado", "votos_exclusivo", "votos_compartilhado",
+            "filmes_exclusivo", "filmes_compartilhado"]:
     if col not in piv.columns:
         piv = piv.with_columns(pl.lit(None).alias(col))
-piv = (piv.drop_nulls(["nota_propria", "nota_importada"])
-          .filter((pl.col("filmes_propria") >= MIN_FILMES_GRUPO) &
-                  (pl.col("filmes_importada") >= MIN_FILMES_GRUPO))
-          .with_columns((pl.col("nota_propria") - pl.col("nota_importada")).alias("gap"))
-          .with_columns(pl.col("nota_propria", "nota_importada", "gap").round(2))
-          .select("Regiao", "nota_propria", "nota_importada", "filmes_propria",
-                  "filmes_importada", "gap")
-          .sort("gap", descending=True))
-salvar(piv.to_dicts(), "dumbbell.json")
+piv = (piv.drop_nulls(["nota_exclusivo", "nota_compartilhado"])
+          .filter((pl.col("filmes_exclusivo") >= MIN_FILMES_GRUPO) &
+                  (pl.col("filmes_compartilhado") >= MIN_FILMES_GRUPO))
+          # diferença de nota = exclusivos − compartilhados; votos = quantas vezes exclusivos/compartilhados
+          .with_columns((pl.col("nota_exclusivo") - pl.col("nota_compartilhado")).alias("dif_nota"),
+                        (pl.col("votos_exclusivo") / pl.col("votos_compartilhado")).alias("razao_votos"))
+          .with_columns(pl.col("nota_exclusivo", "nota_compartilhado", "dif_nota", "razao_votos").round(2),
+                        pl.col("votos_exclusivo", "votos_compartilhado").round(0).cast(pl.Int64))
+          .select("Regiao", "nota_exclusivo", "nota_compartilhado", "dif_nota",
+                  "votos_exclusivo", "votos_compartilhado", "razao_votos",
+                  "filmes_exclusivo", "filmes_compartilhado")
+          .sort("dif_nota", descending=True))
+# os 5 filmes mais votados de cada grupo, por país (aparecem na dica do gráfico)
+TOP_FILMES = 5
+top = (por_filme.sort("numVotes", descending=True)
+                .group_by(["region", "Grupo"], maintain_order=True).head(TOP_FILMES)
+                .with_columns(pl.col("TituloNoPais").str.split(" | ").list.first().alias("titulo")))
+principais = {}
+for r in top.iter_rows(named=True):
+    principais.setdefault(r["region"], {}).setdefault(r["Grupo"], []).append(
+        {"titulo": r["titulo"], "ano": r["startYear"],
+         "nota": r["averageRating"], "votos": r["numVotes"]})
+linhas = piv.to_dicts()
+for d in linhas:
+    d["top_exclusivo"] = principais.get(d["Regiao"], {}).get("exclusivo", [])
+    d["top_compartilhado"] = principais.get(d["Regiao"], {}).get("compartilhado", [])
+salvar(linhas, "dumbbell.json")
 print("Dumbbell:", piv.height, "países")
 
 # ---------- 8) COPIAR OS JSONs PARA AS PASTAS DOS GRÁFICOS ----------
