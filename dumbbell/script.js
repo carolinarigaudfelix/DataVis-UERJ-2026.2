@@ -47,9 +47,9 @@ function colunaTooltip(classe, nome, nota, votos, filmes, top = []) {
     `${fmtBR(f.votos)} votos</span></li>`).join("");
   return `<div class="tt-col"><span class="tt-grupo ${classe}">● ${nome}</span>` +
     `<span class="tt-resumo">Nota média (qualidade): <b>${fmtNota(nota)}</b></span>` +
-    `<span class="tt-resumo">Votos do filme típico (alcance): <b>${fmtBR(votos)}</b></span>` +
+    `<span class="tt-resumo">Votos, mediana (alcance): <b>${fmtBR(votos)}</b></span>` +
     `<span class="tt-resumo">${fmtBR(filmes)} filmes no grupo</span>` +
-    `<span class="tt-sub">Mais vistos do grupo:</span><ol>${lista}</ol></div>`;
+    `<span class="tt-sub">Mais votados no IMDb:</span><ol>${lista}</ol></div>`;
 }
 
 // Mantém a dica dentro da tela (vira para a esquerda/para cima perto das bordas)
@@ -175,7 +175,7 @@ Promise.all([
                       d.filmes_exclusivo, d.top_exclusivo) +
         colunaTooltip("compartilhado", "Compartilhados", d.nota_compartilhado, d.votos_compartilhado,
                       d.filmes_compartilhado, d.top_compartilhado) +
-        `</div><span class="tt-nota">"Filme típico" = mediana: o filme do meio da fila, do menos para o mais votado.</span>`)
+        `</div><span class="tt-nota">Mediana de votos: metade dos filmes do grupo tem menos votos que esse número, e metade tem mais.</span>`)
         .style("opacity", 1);
       posicionarTooltip(e);
     }).on("mouseleave", () => tooltip.style("opacity", 0));

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Exclusivos x compartilhados</title>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <header>
@@ -19,7 +19,7 @@
       <label><input type="radio" name="medida" value="nota" checked> Nota média</label>
       <label><input type="radio" name="medida" value="votos"> Votos (mediana)</label>
       <p class="suave dica-medida">Mediana = votos do filme que fica no meio da fila, do menos
-        para o mais votado. Mostra o filme "típico" do grupo.</p>
+        para o mais votado. Metade dos filmes tem menos votos que isso, metade tem mais.</p>
     </fieldset>
 
     <fieldset>
@@ -47,7 +47,7 @@
         <span><b>Compartilhado</b>: o filme também foi lançado em outros países.
           <span class="ex">Ex.: "Titanic" ou "Cidade de Deus", lançados em dezenas de países.</span></span></li>
     </ul>
-    <p class="suave">Aponte para uma linha (ou toque nela) para ver os números e os 5 filmes mais votados de cada grupo.</p>
+    <p class="suave">Aponte para uma linha (ou toque nela) para ver os números e os 5 filmes mais votados no IMDb de cada grupo.</p>
 
     <details open>
       <summary>Como ler</summary>
@@ -65,7 +65,7 @@
           Mediana = <b>50</b> (o do meio)<br>
           Média = 200.032 (puxada pelo único sucesso)</p>
         <p>Usamos a mediana porque um ou outro filme muito famoso inflaria a média e daria a falsa
-          impressão de que o grupo inteiro é muito visto. A mediana mostra o filme "típico".
+          impressão de que o grupo inteiro é muito visto. A mediana mostra o que é comum no grupo.
           Mais votos = filme mais visto.</p>
       </div>
       <p><b>Diferença</b> (número à direita):</p>
@@ -101,6 +101,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="../comum/paises.js"></script>
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>
