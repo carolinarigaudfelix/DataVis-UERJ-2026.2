@@ -3,20 +3,270 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IMDb por região — D3.js</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; color: #1f1f1f; }
-    a { color: #1f77b4; }
-    li { margin-bottom: 8px; }
-  </style>
+  <title>UERJ Flix</title>
+  <meta name="description" content="Visualizações em D3.js sobre o catálogo de filmes de cada país, com a base do IMDb disponibilizada no Kaggle.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="inicio/style.css?v=3">
 </head>
 <body>
-  <h1>Consumo audiovisual por região</h1>
-  <p>Visualizações em D3.js com a base do IMDb disponibilizada no Kaggle.</p>
-  <ol>
-    <li><a href="rede-paises/">Force-directed — rede de países por catálogo em comum</a></li>
-    <li><a href="beeswarm/">Beeswarm — gemas escondidas por gênero</a></li>
-    <li><a href="dumbbell/">Dumbbell — filmes próprios x importados</a></li>
-  </ol>
+
+  <!-- ===================== ABERTURA ===================== -->
+  <header class="abertura">
+    <div class="holofote" aria-hidden="true"></div>
+    <div class="granulado" aria-hidden="true"></div>
+    <p class="sobretitulo">DataVis · UERJ · 2026 · em cartaz</p>
+    <div class="letreiro">
+      <h1 class="logo" aria-label="UERJ Flix">
+        <span class="palavra"><span>U</span><span>E</span><span>R</span><span>J</span></span><span class="palavra"><span>F</span><span>L</span><span>I</span><span>X</span></span>
+      </h1>
+    </div>
+    <p class="tagline">O que cada país assiste e o que fica escondido</p>
+    <a class="seta" href="#historia">🍿 Começar a sessão <span aria-hidden="true">↓</span></a>
+    <div class="cortina esquerda" aria-hidden="true"></div>
+    <div class="cortina direita" aria-hidden="true"></div>
+  </header>
+  <div class="pelicula" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- ===================== CONTEXTO ===================== -->
+    <section id="historia" class="bloco">
+      <p class="kicker">🎞️ Sinopse</p>
+      <h2>A história</h2>
+      <p class="grande">Cada país tem o seu próprio catálogo de filmes. Alguns filmes atravessam
+        fronteiras, outros nunca saem de casa. E muitos filmes bons passam despercebidos porque
+        pouca gente chegou até eles.</p>
+      <p>Os três gráficos contam essa história em sequência, do geral para o específico:</p>
+
+      <ol class="trilha">
+        <li>
+          <span class="num">1</span>
+          <h3>Rede de países</h3>
+          <p>Começa pelo que os países têm <b>em comum</b>: com quem o catálogo de cada um se parece.</p>
+        </li>
+        <li>
+          <span class="num">2</span>
+          <h3>Dumbbell</h3>
+          <p>Olha para o que <b>sobra</b>: os filmes exclusivos de cada país, bem avaliados, mas pouco vistos.</p>
+        </li>
+        <li>
+          <span class="num">3</span>
+          <h3>Beeswarm</h3>
+          <p>Aponta <b>quais são</b> esses filmes, gênero por gênero: as gemas escondidas.</p>
+        </li>
+      </ol>
+
+      <div class="ficha">
+        <p><b>Base:</b> IMDb, disponibilizada no Kaggle (rahulsaranm/imdb-dataset), só filmes,
+          lançados de <b>1894 a 2025</b>.</p>
+        <p><b>Atenção:</b> o IMDb não mede quantas pessoas assistiram a um filme, e sim quantas o
+          avaliaram. Por isso usamos o número de votos como medida de visibilidade.</p>
+      </div>
+    </section>
+
+    <!-- ===================== OBJETIVOS ===================== -->
+    <section id="objetivos" class="bloco">
+      <p class="kicker">🎯 O roteiro</p>
+      <h2>Objetivos</h2>
+      <div class="objetivos">
+        <article class="objetivo" style="--cor: var(--azul)">
+          <span class="rotulo-obj">Objetivo 1</span>
+          <h3>Mapear o perfil do catálogo de filmes de cada país</h3>
+          <p>Quantos filmes cada país tem, como são avaliados e como as notas se distribuem por gênero.</p>
+        </article>
+        <article class="objetivo" style="--cor: var(--roxo)">
+          <span class="rotulo-obj">Objetivo 2</span>
+          <h3>Comparar catálogos e avaliações entre países</h3>
+          <p>Quem compartilha catálogo com quem, e se o que é exclusivo de um país é mais ou menos bem avaliado.</p>
+        </article>
+        <article class="objetivo" style="--cor: var(--laranja)">
+          <span class="rotulo-obj">Objetivo 3</span>
+          <h3>Recomendar filmes pouco descobertos</h3>
+          <p>Usar o catálogo de países parecidos para achar filmes bem avaliados que pouca gente viu.</p>
+        </article>
+      </div>
+
+      <table class="matriz">
+        <caption>Qual gráfico atende cada objetivo</caption>
+        <thead>
+          <tr><th scope="col">Gráfico</th><th scope="col">Objetivo 1<br><small>Perfil</small></th>
+            <th scope="col">Objetivo 2<br><small>Comparar</small></th><th scope="col">Objetivo 3<br><small>Recomendar</small></th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row"><a href="#rede">1. Rede de países</a></th><td>●</td><td>●</td><td>●</td></tr>
+          <tr><th scope="row"><a href="#dumbbell">2. Dumbbell</a></th><td>●</td><td>●</td><td>●</td></tr>
+          <tr><th scope="row"><a href="#beeswarm">3. Beeswarm</a></th><td>●</td><td>–</td><td>●</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===================== GRÁFICO 1 ===================== -->
+    <div class="pelicula" aria-hidden="true"></div>
+    <section id="rede" class="capitulo">
+      <div class="bloco">
+        <p class="kicker">🎬 Cena 1 · Force-directed</p>
+        <h2>Rede de países: quem compartilha catálogo com quem</h2>
+
+        <div class="perguntas">
+          <p><span class="tag">Pergunta</span> Quais países têm o maior catálogo de filmes e qual a nota média desse catálogo?</p>
+          <p><span class="tag">Pergunta</span> Quão parecido é o catálogo de filmes entre dois países quaisquer?</p>
+        </div>
+
+        <ul class="leitura">
+          <li><b>Círculo</b> = um país. Quanto maior, mais filmes no catálogo.</li>
+          <li><b>Cor</b> = nota média do catálogo. Quanto mais escura, maior a nota.</li>
+          <li><b>Linha</b> = catálogos parecidos. Quanto mais grossa e curta, maior a proporção de filmes em comum,
+            medida pelo índice de Jaccard
+            <button type="button" class="info" data-abre="popJaccard" aria-label="O que é o índice de Jaccard?">i</button></li>
+          <li>Cada país mostra suas <b>5 ligações mais fortes</b>. Entram só países com pelo menos 1.000 filmes.</li>
+        </ul>
+
+        <p class="objetivos-mini"><span>Atende:</span>
+          <i style="--cor: var(--azul)">Perfil do catálogo</i>
+          <i style="--cor: var(--roxo)">Comparar países</i>
+          <i style="--cor: var(--laranja)">Recomendar</i></p>
+      </div>
+
+      <figure class="moldura">
+        <iframe src="rede-paises/" title="Rede de países por catálogo em comum" loading="lazy"></iframe>
+      </figure>
+      <p class="rodape-graf"><a href="rede-paises/" target="_blank" rel="noopener">Abrir em tela cheia ↗</a> ·
+        Referência D3: <a href="https://observablehq.com/@d3/force-directed-graph/2" target="_blank" rel="noopener">Force-directed graph</a></p>
+    </section>
+
+    <!-- ===================== GRÁFICO 2 ===================== -->
+    <div class="pelicula" aria-hidden="true"></div>
+    <section id="dumbbell" class="capitulo">
+      <div class="bloco">
+        <p class="kicker">🎬 Cena 2 · Dumbbell</p>
+        <h2>O cinema que fica em casa x o que circula pelo mundo</h2>
+
+        <div class="perguntas">
+          <p><span class="tag">Pergunta</span> Em cada país, os filmes exclusivos (lançados só ali) são mais ou menos bem avaliados que os compartilhados com outros países?</p>
+        </div>
+
+        <ul class="leitura">
+          <li><b>Cada linha</b> = um país.</li>
+          <li><b class="txt-laranja">Ponto laranja</b> = exclusivos: filmes lançados só naquele país.</li>
+          <li><b class="txt-azul">Ponto azul</b> = compartilhados: filmes lançados também em outros países.</li>
+          <li><b>Número à direita</b> = a diferença. Verde: exclusivos com nota maior. Vermelho: menor.</li>
+          <li>No modo <b>votos</b>, compara a visibilidade pela mediana: "×0,1" quer dizer que o exclusivo típico tem um décimo dos votos do compartilhado.</li>
+        </ul>
+
+        <div class="destaque">
+          <p class="destaque-titulo">No Brasil</p>
+          <div class="numeros">
+            <div><span class="n txt-laranja">6,33</span><span>nota dos exclusivos</span></div>
+            <div><span class="n txt-azul">6,05</span><span>nota dos compartilhados</span></div>
+            <div><span class="n txt-laranja">100</span><span>votos do exclusivo típico</span></div>
+            <div><span class="n txt-azul">1.314</span><span>votos do compartilhado típico</span></div>
+          </div>
+          <p>Mais bem avaliados, mas muito menos vistos.</p>
+        </div>
+
+        <p class="objetivos-mini"><span>Atende:</span>
+          <i style="--cor: var(--azul)">Perfil do catálogo</i>
+          <i style="--cor: var(--roxo)">Comparar países</i>
+          <i style="--cor: var(--laranja)">Recomendar</i></p>
+      </div>
+
+      <figure class="moldura">
+        <iframe src="dumbbell/" title="Dumbbell: exclusivos x compartilhados" loading="lazy"></iframe>
+      </figure>
+      <p class="rodape-graf"><a href="dumbbell/" target="_blank" rel="noopener">Abrir em tela cheia ↗</a> ·
+        Referência D3: <a href="https://observablehq.com/@d3/dot-plot/2" target="_blank" rel="noopener">Dot plot</a></p>
+    </section>
+
+    <!-- ===================== GRÁFICO 3 ===================== -->
+    <div class="pelicula" aria-hidden="true"></div>
+    <section id="beeswarm" class="capitulo">
+      <div class="bloco">
+        <p class="kicker">🎬 Cena 3 · Beeswarm</p>
+        <h2>As gemas escondidas de cada gênero</h2>
+
+        <div class="perguntas">
+          <p><span class="tag">Pergunta</span> Como as notas dos filmes se distribuem entre os gêneros dentro de cada país?</p>
+          <p><span class="tag">Pergunta</span> Quais filmes têm nota alta e poucos votos, por país e gênero?</p>
+          <p><span class="tag">Pergunta</span> Em cada país, quais gêneros possuem mais filmes com pouca descoberta?</p>
+        </div>
+
+        <ul class="leitura">
+          <li><b>Cada ponto</b> = um filme. Quanto mais à direita, maior a nota.</li>
+          <li><b>Tamanho</b> = número de votos.</li>
+          <li><b>Cada faixa</b> = um gênero. Um filme com vários gêneros aparece em mais de uma.</li>
+          <li><b class="txt-laranja">Gema</b> = nota 7,5 ou mais e votos entre os 30% menores do gênero naquele país.</li>
+          <li>A altura do ponto dentro da faixa não significa nada: só evita que um fique em cima do outro.</li>
+        </ul>
+
+        <p class="objetivos-mini"><span>Atende:</span>
+          <i style="--cor: var(--azul)">Perfil do catálogo</i>
+          <i style="--cor: var(--laranja)">Recomendar</i></p>
+      </div>
+
+      <figure class="moldura">
+        <iframe src="beeswarm/" title="Beeswarm: gemas escondidas por gênero" loading="lazy"></iframe>
+      </figure>
+      <p class="rodape-graf"><a href="beeswarm/" target="_blank" rel="noopener">Abrir em tela cheia ↗</a> ·
+        Referência D3: <a href="https://observablehq.com/@d3/beeswarm/2" target="_blank" rel="noopener">Beeswarm</a></p>
+    </section>
+
+    <!-- ===================== CONCLUSÃO ===================== -->
+    <div class="pelicula" aria-hidden="true"></div>
+    <section id="conclusao" class="bloco">
+      <p class="kicker">⭐ Crítica final</p>
+      <h2>Conclusão</h2>
+      <ol class="achados">
+        <li><b>Catálogo não segue fronteira.</b> O Brasil se parece mais com Espanha, Itália, França e
+          Portugal do que com os vizinhos da América do Sul. E países que dividem catálogo acabam com
+          notas médias parecidas.</li>
+        <li><b>O cinema que não viaja é pouco visto.</b> Em todos os países, os filmes exclusivos têm
+          bem menos votos que os compartilhados. Na nota, depende do país: no Brasil, os exclusivos
+          são mais bem avaliados.</li>
+        <li><b>Os filmes existem, só falta encontrar.</b> Cada país e cada gênero tem suas gemas: filmes
+          com nota alta que quase ninguém avaliou.</li>
+      </ol>
+      <p class="grande recomendacao">Gostou do catálogo de um país? Procure as gemas dele e dos vizinhos dele na rede.</p>
+
+      <div class="fim">
+        <button type="button" id="botaoFim" class="botao-fim">🎬 Fim</button>
+        <div id="letreiroFim" class="letreiro-fim" aria-live="polite"></div>
+        <p class="creditos"><b>Direção, roteiro e dados:</b> Carolina Felix<br>Visualização de Dados · UERJ, 2026<br>
+          <a href="https://github.com/carolinarigaudfelix/DataVis-UERJ-2026.2" target="_blank" rel="noopener">Código e dados no GitHub</a></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== POP-UP DO JACCARD ===================== -->
+  <dialog id="popJaccard" class="pop" aria-labelledby="popTitulo">
+    <button type="button" class="fechar" data-fecha aria-label="Fechar">×</button>
+    <h2 id="popTitulo">O que é o índice de Jaccard?</h2>
+    <p>Mede quanto dois catálogos se sobrepõem, em <b>proporção</b>, não em quantidade:</p>
+    <p class="formula">Jaccard = <span>filmes em comum</span> ÷ <span>filmes que estão em pelo menos um dos dois</span></p>
+    <p>Vai de <b>0</b> (nenhum filme em comum) a <b>1</b> (catálogos idênticos).</p>
+
+    <h3>Exemplo: Brasil e Espanha</h3>
+    <svg class="venn" viewBox="0 0 420 190" role="img"
+      aria-label="Brasil com 61.966 filmes, Espanha com 61.072, 37.411 em comum">
+      <circle cx="150" cy="95" r="85" class="c-br"/>
+      <circle cx="270" cy="95" r="85" class="c-es"/>
+      <text x="105" y="90" class="t">Só Brasil</text><text x="105" y="114" class="t n">24.555</text>
+      <text x="210" y="90" class="t">Em comum</text><text x="210" y="114" class="t n">37.411</text>
+      <text x="315" y="90" class="t">Só Espanha</text><text x="315" y="114" class="t n">23.661</text>
+    </svg>
+    <ul class="conta">
+      <li>Brasil: 61.966 filmes · Espanha: 61.072 filmes</li>
+      <li>Filmes nos dois: <b>37.411</b></li>
+      <li>Filmes em pelo menos um: 61.966 + 61.072 − 37.411 = <b>85.627</b></li>
+      <li>Jaccard = 37.411 ÷ 85.627 = <b>0,437</b></li>
+    </ul>
+    <p>Ou seja: juntando os dois catálogos, <b>43,7%</b> dos filmes estão nos dois países.</p>
+    <p class="nota"><b>Por que proporção?</b> Contando só a quantidade, países com catálogos enormes,
+      como os EUA, pareceriam "parecidos" com todo mundo apenas por terem muitos filmes.</p>
+  </dialog>
+
+  <canvas id="confete" aria-hidden="true"></canvas>
+  <script src="inicio/script.js?v=3"></script>
 </body>
 </html>
