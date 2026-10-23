@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Exclusivos x compartilhados</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <header>
@@ -67,13 +67,18 @@
         <p>Usamos a mediana porque um ou outro filme muito famoso inflaria a média e daria a falsa
           impressão de que o grupo inteiro é muito visto. A mediana mostra o que é comum no grupo.
           Mais votos = filme mais visto.</p>
+        <p><b>Por que a nota usa média e os votos usam mediana?</b> A nota vai de 1 a 10, então
+          nenhum filme distorce a média sozinho. Já os votos vão de 50 a mais de 3 milhões, e um único
+          sucesso puxaria a média lá para cima.</p>
       </div>
       <p><b>Diferença</b> (número à direita):</p>
       <ul>
         <li>Na nota: exclusivos − compartilhados. <b class="txt-positivo">Verde</b>: os exclusivos
           têm nota maior. <b class="txt-negativo">Vermelho</b>: menor.</li>
         <li>Nos votos: quantas vezes os exclusivos têm os votos dos compartilhados. "×0,5" = a
-          metade.</li>
+          metade.
+          <span class="ex">Ex.: no Brasil, o exclusivo típico tem 100 votos e o compartilhado típico,
+            1.314. 100 ÷ 1.314 ≈ 0,08, que arredonda para ×0,1: cerca de um décimo dos votos.</span></li>
       </ul>
       <p>A nota e os votos são do IMDb, dados por usuários do mundo todo, e não só do público
         daquele país.</p>
@@ -89,8 +94,6 @@
           (comédias populares, filmes de TV), que não viajam e tendem a ter nota menor.</li>
         <li><b>Público fiel:</b> exclusivos com poucos votos podem ter nota alta, porque são
           avaliados sobretudo por quem já gosta daquele cinema.</li>
-        <li><b>Registro incompleto:</b> alguns filmes aparecem em um só país porque o IMDb não
-          registrou os outros lançamentos.</li>
       </ul>
     </details>
   </section>
@@ -101,6 +104,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="../comum/paises.js"></script>
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

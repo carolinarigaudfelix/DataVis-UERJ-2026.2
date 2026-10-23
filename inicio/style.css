@@ -272,3 +272,12 @@ h3 { font-size: 1.2rem; margin: 0 0 6px; }
   .cortina { display: none; }
   .letreiro::before, .letreiro::after, .granulado { animation: none !important; }
 }
+
+/* insight de cada gráfico, logo antes dele */
+.insight {
+  margin: 20px 0 0; padding: 16px 20px; border-radius: 12px;
+  background: linear-gradient(90deg, rgba(240,149,74,.16), rgba(240,149,74,.04));
+  border-left: 5px solid var(--laranja);
+}
+.insight-rotulo { display: block; font-weight: 700; color: var(--laranja); font-size: .85rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; }
+.insight p { margin: 0; font-size: 1.15rem; font-weight: 600; }
